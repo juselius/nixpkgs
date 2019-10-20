@@ -69,32 +69,18 @@ let
     pkgs.writeScriptBin "dotnet" ''
         #!${pkgs.bash}/bin/bash
 
-        d=$HOME/.dotnet/sdk/${version}
+        d=/tmp/dotnet-sdk/${version}
 
         if [ ! -d $d ]; then
-          mkdir -p $d/packs
-          mkdir -p $d/sdk/${version}
-          pushd $d
+          echo "Copying SDK to temporary DOTNET_ROOT=$d"
+          mkdir -p $d
 
-          ln -s ${dotnet-sdk}/{host,shared,templates} .
-
-          cd packs
-          ln -s ${dotnet-sdk}/packs/* .
-          rm Microsoft.NETCore.App.Host.linux-x64
-          cp -r ${dotnet-sdk}/packs/Microsoft.NETCore.App.Host.linux-x64 .
-          chmod u+w Microsoft.NETCore.App.Host.linux-x64/3.0.0/runtimes/linux-x64/native/*
-
-          cd ../sdk/${version}
-          ln -s ${dotnet-sdk}/sdk/${version}/* .
-          rm AppHostTemplate
-          cp -r ${dotnet-sdk}/sdk/${version}/AppHostTemplate .
-          chmod u+w AppHostTemplate/*
-
-          popd
+          cp -r ${dotnet-sdk}/* $d
+          chmod -R u+w $d
         fi
 
         export DOTNET_ROOT=$d
-        exec ${dotnet-sdk}/dotnet $@
+        exec $d/dotnet $@
     '';
 in
   dotnet-wrapper
